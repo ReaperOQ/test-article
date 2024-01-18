@@ -1,7 +1,10 @@
 package ru.reaperoq.test_article.ui.announcements
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -18,22 +21,19 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material3.fade
 import com.google.accompanist.placeholder.material3.placeholder
-import com.google.accompanist.placeholder.material3.shimmer
 import org.koin.androidx.compose.koinViewModel
 import ru.reaperoq.test_article.presentation.AnnouncementsViewModel
 import ru.reaperoq.test_article.presentation.models.AnnouncementEvent
@@ -48,11 +48,9 @@ fun AnnouncementsScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    var snackbarResult: SnackbarResult? by remember { mutableStateOf(null) }
-
     LaunchedEffect(uiState.errorMessage) {
         if (uiState.errorMessage != null) {
-            snackbarResult = snackbarHostState.showSnackbar(
+            val snackbarResult = snackbarHostState.showSnackbar(
                 uiState.errorMessage!!,
                 actionLabel = "Retry",
                 false,
@@ -65,8 +63,6 @@ fun AnnouncementsScreen(
 
                 else -> {}
             }
-
-            snackbarResult = null
         }
     }
 
@@ -78,16 +74,17 @@ fun AnnouncementsScreen(
             )
         }
     ) { padding ->
-        if (uiState.isLoaded) {
-            AnnouncementsList(
-                modifier = modifier
-                    .fillMaxSize()
-                    .consumeWindowInsets(padding)
-                    .padding(padding),
-                list = uiState.list
-            )
-        } else {
-            AnnouncementPlaceholderList(modifier)
+        Crossfade(targetState = uiState.isLoaded, label = "Announcements list fade") {
+            if (it) {
+                AnnouncementsList(
+                    modifier = modifier
+                        .consumeWindowInsets(padding)
+                        .fillMaxSize(),
+                    list = uiState.list
+                )
+            } else {
+                AnnouncementPlaceholderList(modifier)
+            }
         }
     }
 }
@@ -104,7 +101,50 @@ fun AnnouncementsList(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         items(list) { announcement ->
-            Text(text = announcement.title)
+            AnnouncementItem(announcement = announcement)
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AnnouncementItem(modifier: Modifier = Modifier, announcement: AnnouncementUi) {
+    ElevatedCard(
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = announcement.type,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+            )
+            Text(
+                text = "From ${announcement.startDate} to ${announcement.endDate}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                style = MaterialTheme.typography.titleMedium,
+                text = announcement.title
+            )
+            Text(
+                style = MaterialTheme.typography.bodyMedium,
+                text = announcement.description
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                announcement.tags.forEach {
+                    AssistChip(
+                        onClick = { },
+                        label = { Text(text = it) }
+                    )
+                }
+            }
+            Text(
+                text = announcement.date
+            )
         }
     }
 }
@@ -130,7 +170,9 @@ fun AnnouncementPlaceholderList(
 fun AnnouncementPlaceholder(
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard {
+    ElevatedCard(
+        modifier = modifier
+    ) {
         Column(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -141,6 +183,13 @@ fun AnnouncementPlaceholder(
                     highlight = PlaceholderHighlight.fade()
                 ),
                 text = "Latest Activities"
+            )
+            Text(
+                modifier = Modifier.placeholder(
+                    visible = true,
+                    highlight = PlaceholderHighlight.fade()
+                ),
+                text = "From 18.01.2023 to 20.01.2023"
             )
             Text(
                 modifier = Modifier.placeholder(
@@ -177,7 +226,7 @@ fun AnnouncementPlaceholder(
                     visible = true,
                     highlight = PlaceholderHighlight.fade()
                 ),
-                text = "28 Jan 2023"
+                text = "11:00 18.01.2023"
             )
         }
     }

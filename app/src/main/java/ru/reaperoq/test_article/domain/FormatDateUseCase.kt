@@ -1,10 +1,8 @@
 package ru.reaperoq.test_article.domain
 
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.util.Date
 import java.util.Locale
-import java.util.regex.Pattern
 
 class FormatDateUseCase {
     private val dateFormatter = SimpleDateFormat(
@@ -17,9 +15,6 @@ class FormatDateUseCase {
         Locale.getDefault()
     )
 
-    operator fun invoke(date: LocalDate): String =
-        dateFormatter.format(date)
-
-    operator fun invoke(dateTime: LocalDateTime): String =
-        dateTimeFormatter.format(dateTime)
+    operator fun invoke(date: Date, includeTime: Boolean = false): String =
+        if (includeTime) dateTimeFormatter.format(date) else dateFormatter.format(date)
 }
