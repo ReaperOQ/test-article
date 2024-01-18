@@ -5,6 +5,7 @@
 при помощи UseCase в слое *domain*. ViewModel получает доступ к репозиторию (*data*) через интерфейсы
 из слоя *api* посредством DI.
 UI получает обновление состояния из ViewModel при помощи StateFlow
+
 <img src="loading.png" alt="загрузка" width="200"/><img src="loaded.png" alt="загружено" width="200"/><img src="error.png" alt="ошибка" width="200"/>
 ## Используемые библиотеки
 - Язык программирования Kotlin 1.9.0
